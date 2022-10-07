@@ -141,7 +141,7 @@ weapons = [
         'Vorpal Sword',
         'Ninja Star',
         'Katana',
-        'Fan Blades - Katana Wins!',
+        'Fan Blades',
         'Drothum\'s Scythe',
         'Basket',
         'Red hot tongs',

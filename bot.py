@@ -197,7 +197,11 @@ async def chaosgauntlet(ctx: interactions.CommandContext):
         title="Chaos Gauntlet",
         url='https://nexustabletop.com',
         description='A chaotic weapon is pulled.',
-        color=interactions.Color.blurple()
+        color=interactions.Color.blurple(),
+        footer=interactions.EmbedFooter(
+            text='Documentation on weapons and such can be found here.',
+            icon_url='https://github.com/appl3tree/nexusbot'
+            )
         )
 
     weaponText.add_field(name='Weapon', value=weapon['Weapon'], inline=True)
