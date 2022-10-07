@@ -239,10 +239,20 @@ async def chaosgauntlet(ctx: interactions.CommandContext):
                 ),
             interactions.Option(
                 name='weakness',
-                description='Decreases probability of wins.',
+                description='Decreases the probability of a win.',
                 required=False,
-                type=interactions.OptionType.BOOLEAN,
-                ),
+                type=interactions.OptionType.INTEGER,
+                choices=[
+                    interactions.Choice(
+                        name='1',
+                        value=1
+                        ),
+                    interactions.Choice(
+                        name='2',
+                        value=2
+                        )
+                ]
+            ),
             interactions.Option(
                 name='weakness_factor',
                 description='The level of Weakness to be applied.',
