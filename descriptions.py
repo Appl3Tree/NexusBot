@@ -16,7 +16,7 @@ weaponDescriptions = {
         'Carbon Pistol': '',
         'Thunder Gun': '',
         'Blight Rifle': '',
-        'Chaos Blade': 'Crackling with harsh crimson energy, this rifle hums with chaos itself. Once pu      lled, keep this weapon until the end of combat, instead of it vanishing after the first use.',
+        'Chaos Blade': 'Crackling with harsh crimson energy, this rifle hums with chaos itself. Once pulled, keep this weapon until the end of combat, instead of it vanishing after the first use.',
         'Chaos Cannon': '',
         'Thermos': '',
         'Candy Corn': '',
