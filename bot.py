@@ -25,7 +25,9 @@ class aclient(discord.Client):
     async def on_ready(self):
         await self.wait_until_ready()
         if not self.synced:
-            synced = await tree.sync()  # guild = discord.Object(id = guilds[0]))
+            synced = await tree.sync()
+            # For testing
+            # synced = await tree.sync(guild = discord.Object(id = guilds[0]))
             self.synced = True
         prfx = (Back.BLACK + Fore.GREEN + time.strftime("%H:%M:%S UTC", time.gmtime())+ Back.RESET + Fore.WHITE + Style.BRIGHT)
         print(prfx + ' Logged in as ' + Fore.YELLOW + client.user.name)
