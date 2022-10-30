@@ -238,24 +238,24 @@ async def chaosgauntlet(ctx: interactions.CommandContext):
                 type=interactions.OptionType.INTEGER,
                 ),
             interactions.Option(
-                name='weakness',
-                description='Decreases the probability of a win.',
+                name='attribute',
+                description='Increases or decreases the probability of a win.',
                 required=False,
-                type=interactions.OptionType.INTEGER,
+                type=interactions.OptionType.STRING,
                 choices=[
                     interactions.Choice(
-                        name='1',
-                        value=1
-                        ),
+                        name='Weakness',
+                        value='weakness'
+                    ),
                     interactions.Choice(
-                        name='2',
-                        value=2
-                        )
+                        name='Strength',
+                        value='strength'
+                    )
                 ]
             ),
             interactions.Option(
-                name='weakness_factor',
-                description='The level of Weakness to be applied.',
+                name='attribute_factor',
+                description='The level of Weakness or Strength to be applied.',
                 required=False,
                 type=interactions.OptionType.INTEGER,
                 choices=[
@@ -269,31 +269,9 @@ async def chaosgauntlet(ctx: interactions.CommandContext):
                         )
                     ]
                 ),
-            interactions.Option(
-                name='strength',
-                description='Increases probability of wins.',
-                required=False,
-                type=interactions.OptionType.BOOLEAN,
-                ),
-            interactions.Option(
-                name='strength_factor',
-                description='The level of Strength to be applied.',
-                required=False,
-                type=interactions.OptionType.INTEGER,
-                choices=[
-                    interactions.Choice(
-                        name='1',
-                        value=1
-                        ),
-                    interactions.Choice(
-                        name='2',
-                        value=2
-                        )
-                    ]
-                )
             ]
         )
-async def _roll(ctx: interactions.CommandContext, dice, sides, strength = None, strength_factor = None, weakness = None, weakness_factor = None):
+async def _roll(ctx: interactions.CommandContext, dice, sides, attribute = None, attribute_factor = None):
     rollText = interactions.Embed(
         title="Roll Dice",
         url='https://nexustabletop.com',
@@ -308,28 +286,29 @@ async def _roll(ctx: interactions.CommandContext, dice, sides, strength = None, 
         rolls.append(random.randint(1, sides))
     if sides == 6:
         wins = 0
-        if strength and strength_factor:
-            if strength_factor == 2:
-                for val in rolls:
-                    if val == 2 or val == 3 or val == 4 or val == 5 or val == 6:
-                        wins += 1
-            elif strength_factor == 1:
-                for val in rolls:
-                    if val == 3 or val == 4 or val == 5 or val == 6:
-                        wins += 1
-        elif weakness and weakness_factor:
-            if weakness_factor == 2:
-                for val in rolls:
-                    if val == 6:
-                        wins += 1
-            elif weakness_factor == 1:
-                for val in rolls:
-                    if val == 5 or val == 6:
-                        wins += 1
-        else:
-            for val in rolls:
-                if val == 4 or val == 5 or val == 6:
-                    wins += 1
+        if attribute:
+            rollText.add_field(name='Attribute', value=attribute.capitalize(), inline=True)
+            if attribute_factor == 2:
+                rollText.add_field(name='Modifier', value=2, inline=True)
+                if attribute == 'weakness':
+                    for val in rolls:
+                        if val == 6:
+                            wins += 1
+                else:
+                    for val in rolls:
+                        if 2 <= val <= 6:
+                            wins += 1
+            else:
+                rollText.add_field(name='Modifier', value=1, inline=True)
+                if attribute == 'weakness':
+                    for val in rolls:
+                        if 5 <= val <= 6:
+                            wins += 1
+                else:
+                    for val in rolls:
+                        if 3 <= val <= 6:
+                            wins += 1
+            rollText.add_field(name='\u200b', value='\u200b', inline=True)
         if wins == dice and dice >= 5:
             wins = floor(wins * 1.5)
             rollText.add_field(name='Critical wins!', value=wins, inline=True)
