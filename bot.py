@@ -1,22 +1,56 @@
 #!/usr/bin/env python3
+# Modules
 import discord
+import time
+import platform
+from discord import app_commands
+from discord.ext import commands
+from os import name, system, getenv
+from math import floor
+from bs4 import BeautifulSoup
+from colorama import Back, Fore, Style
+from typing import Literal
+# Local file data
 import random
 import random_npcs
 from secret import discord_token, guilds
-import interactions
-from os import name, system, getenv
-from math import floor
 from weapons import weapons
 from descriptions import weaponDescriptions
-from datetime import datetime, timedelta
-from time import sleep
-from bs4 import BeautifulSoup
 
-bot = interactions.Client(token=discord_token)
+class aclient(discord.Client):
+    def __init__(self):
+        super().__init__(intents=discord.Intents.default())
+        self.synced = False
 
-@bot.event
-async def on_ready():
-    print('Ready!')
+    async def on_ready(self):
+        await self.wait_until_ready()
+        if not self.synced:
+            synced = await tree.sync()  # guild = discord.Object(id = guilds[0]))
+            self.synced = True
+        prfx = (Back.BLACK + Fore.GREEN + time.strftime("%H:%M:%S UTC", time.gmtime())+ Back.RESET + Fore.WHITE + Style.BRIGHT)
+        print(prfx + ' Logged in as ' + Fore.YELLOW + client.user.name)
+        print(prfx + ' Bot ID ' + Fore.YELLOW + str(client.user.id))
+        print(prfx + ' Discord Version ' + Fore.YELLOW + discord.__version__)
+        print(prfx + ' Python Version ' + Fore.YELLOW + str(platform.python_version()))
+        print(prfx + ' Slash CMDs Synced ' + Fore.YELLOW + str(len(synced)) + ' Commands')
+        print('Synced Apps:')
+        for app in synced:
+            print('\t- ' + str(app))
+        print('All ready!')
+
+
+client = aclient()
+tree = app_commands.CommandTree(client)
+
+# Purely for testing changes
+# @tree.command(
+#         name = 'test',
+#         description = 'Test',
+#         guild = discord.Object(id = guilds[0])
+#     )
+# async def self(interaction: discord.Interaction, dice: int, sides: discord.Member=None):
+#     await interaction.response.send_message(content = f'You rolled {dice} dice.')
+
 
 def clear():
     if name == 'nt':
@@ -147,12 +181,12 @@ def generateNPC(race=None, gender=None):
         # TODO: Randomize the rest of the character.
     return random.choice(list(random_npcs.races))
 
-@bot.command(
+@tree.command(
         name='chaosgauntlet',
         description='Reach through and pull a weapon from a dimension of chaos.',
-        scope=guilds,
-        )
-async def chaosgauntlet(ctx: interactions.CommandContext):
+        # guild = discord.Object(id = guilds[0])
+    )
+async def self(interaction: discord.Interaction):
     weapon = rollWeapon()
 
     # Weapon specific modifications
@@ -193,11 +227,11 @@ async def chaosgauntlet(ctx: interactions.CommandContext):
 
     if weaponDescriptions[weapon['Weapon']]:
         weapon['Description'] = weaponDescriptions[weapon['Weapon']]
-    weaponText = interactions.Embed(
+    weaponText = discord.Embed(
         title="Chaos Gauntlet",
         url='https://nexustabletop.com',
         description='A chaotic weapon is pulled.',
-        color=interactions.Color.blurple()
+        color=discord.Color.blurple()
         )
 
     weaponText.add_field(name='Weapon', value=weapon['Weapon'], inline=True)
@@ -218,65 +252,19 @@ async def chaosgauntlet(ctx: interactions.CommandContext):
         weaponText.add_field(name='Corrosive Damage', value=weapon['Corrosive Damage'], inline=True)
     if 'Description' in weapon:
         weaponText.add_field(name='Description', value=weapon['Description'], inline=True)
-    await ctx.send(embeds=weaponText)
+    await interaction.response.send_message(embed=weaponText)
 
-@bot.command(
+@tree.command(
         name='roll',
         description='Rolls user-specified number of user-specified-sided dice.',
-        scope=guilds,
-        options=[
-            interactions.Option(
-                name='dice',
-                description='Number of dice to roll.',
-                required=True,
-                type=interactions.OptionType.INTEGER,
-                ),
-            interactions.Option(
-                name='sides',
-                description='Number of sides each die has.',
-                required=True,
-                type=interactions.OptionType.INTEGER,
-                ),
-            interactions.Option(
-                name='attribute',
-                description='Increases or decreases the probability of a win.',
-                required=False,
-                type=interactions.OptionType.STRING,
-                choices=[
-                    interactions.Choice(
-                        name='Weakness',
-                        value='weakness'
-                    ),
-                    interactions.Choice(
-                        name='Strength',
-                        value='strength'
-                    )
-                ]
-            ),
-            interactions.Option(
-                name='attribute_factor',
-                description='The level of Weakness or Strength to be applied.',
-                required=False,
-                type=interactions.OptionType.INTEGER,
-                choices=[
-                    interactions.Choice(
-                        name='1',
-                        value=1
-                        ),
-                    interactions.Choice(
-                        name='2',
-                        value=2
-                        )
-                    ]
-                ),
-            ]
-        )
-async def _roll(ctx: interactions.CommandContext, dice, sides, attribute = None, attribute_factor = None):
-    rollText = interactions.Embed(
+        # guild = discord.Object(id = guilds[0])
+    )
+async def self(interaction: discord.Interaction, dice: int, sides: int, attribute:Literal['Strength', 'Weakness'] = None, attribute_factor: Literal[1, 2] = None):
+    rollText = discord.Embed(
         title="Roll Dice",
         url='https://nexustabletop.com',
         description='Rolls a user-specified number of user-specified-sided dice. Can include a Strength factor.',
-        color=interactions.Color.blurple()
+        color=discord.Color.blurple()
             )
     rolls = []
     rollText.add_field(name="Number of Dice", value=dice, inline=True)
@@ -290,7 +278,7 @@ async def _roll(ctx: interactions.CommandContext, dice, sides, attribute = None,
             rollText.add_field(name='Attribute', value=attribute.capitalize(), inline=True)
             if attribute_factor == 2:
                 rollText.add_field(name='Modifier', value=2, inline=True)
-                if attribute == 'weakness':
+                if attribute == 'Weakness':
                     for val in rolls:
                         if val == 6:
                             wins += 1
@@ -300,7 +288,7 @@ async def _roll(ctx: interactions.CommandContext, dice, sides, attribute = None,
                             wins += 1
             else:
                 rollText.add_field(name='Modifier', value=1, inline=True)
-                if attribute == 'weakness':
+                if attribute == 'Weakness':
                     for val in rolls:
                         if 5 <= val <= 6:
                             wins += 1
@@ -316,49 +304,19 @@ async def _roll(ctx: interactions.CommandContext, dice, sides, attribute = None,
             rollText.add_field(name='Total Wins', value=wins, inline=True)
     rollText.add_field(name='Rolls', value=str(rolls), inline=True)
     rollText.add_field(name='\u200b', value='\u200b', inline=True)
-    await ctx.send(embeds=rollText)
+    await interaction.response.send_message(embed=rollText)
 
-@bot.command(
+@tree.command(
         name='skill',
         description='Rolls a user-specified number of six-sided dice and a twenty-sided die. Optional Strength factor.',
-        scope=guilds,
-        options=[
-            interactions.Option(
-                name='dice',
-                description='Number of dice to roll.',
-                required=True,
-                type=interactions.OptionType.INTEGER,
-                ),
-            interactions.Option(
-                name='strength',
-                description='Increases probability of wins.',
-                required=False,
-                type=interactions.OptionType.BOOLEAN,
-                ),
-            interactions.Option(
-                name='strength_factor',
-                description='The level of Strength to be applied.',
-                required=False,
-                type=interactions.OptionType.INTEGER,
-                choices=[
-                    interactions.Choice(
-                        name='1',
-                        value=1
-                        ),
-                    interactions.Choice(
-                        name='2',
-                        value=2
-                        )
-                    ]
-                )
-            ]
-        )
-async def _skill(ctx: interactions.CommandContext, dice, strength = None, strength_factor = None):
-    rollText = interactions.Embed(
+        # guild = discord.Object(id = guilds[0])
+    )
+async def self(interaction: discord.Interaction, dice: int, strength: bool = None, strength_factor: Literal[1, 2] = None):
+    rollText = discord.Embed(
         title="Use Skill",
         url='https://nexustabletop.com',
         description='Rolls a user-specified number of user-specified-sided dice. Can include a Strength factor.',
-        color=interactions.Color.blurple()
+        color=discord.Color.blurple()
             )
     rolls = []
     d20Roll = random.randint(1, 20)
@@ -398,33 +356,19 @@ async def _skill(ctx: interactions.CommandContext, dice, strength = None, streng
         rollText.add_field(name='Wins', value=wins, inline=True)
     rollText.add_field(name='Total', value=d20Roll + wins, inline=True)
     rollText.add_field(name='\u200b', value='\u200b', inline=True)
-    await ctx.send(embeds=rollText)
+    await interaction.response.send_message(embed=rollText)
 
-@bot.command(
+@tree.command(
         name='damage',
         description='Calculates total damage of rolls plus flat damage if there is any.',
-        scope=guilds,
-        options=[
-            interactions.Option(
-                name='flat_damage',
-                description='Additional Flat Damage to add.',
-                required=False,
-                type=interactions.OptionType.INTEGER,
-                ),
-            interactions.Option(
-                name='dice',
-                description='Number of six-sided dice to roll when calculating total damage.',
-                required=False,
-                type=interactions.OptionType.INTEGER,
-                )
-            ]
-        )
-async def _damage(ctx: interactions.CommandContext, flat_damage = None, dice = None):
-    damage=interactions.Embed(
+        # guild = discord.Object(id = guilds[0])
+    )
+async def self(interaction: discord.Interaction, flat_damage: int = None, dice: int = None):
+    damage=discord.Embed(
         title="Damage Calculator",
         url='https://nexustabletop.com',
         description='Calculates the total damage of all 6-sided rolls plus flat damage.',
-        color=interactions.Color.blurple()
+        color=discord.Color.blurple()
     )
     totalDamage = 0
     if flat_damage or dice:
@@ -439,45 +383,17 @@ async def _damage(ctx: interactions.CommandContext, flat_damage = None, dice = N
         damage.add_field(name='Total Damage', value=totalDamage, inline=False)
         if dice:
             damage.add_field(name='D6 rolls', value=str(rolls), inline=False)
-        await ctx.send(embeds=damage)
+        await interaction.response.send_message(embed=damage)
     else:
         damage.add_field(name='Syntax Error', value='Must include flat damage and/or number of dice to roll.')
-        await ctx.send(embeds=damage)
+        await interaction.response.send_message(embed=damage)
 
-@bot.command(
+@tree.command(
         name='npc',
         description='Generates a random NPC.',
-        scope=guilds,
-        options=[
-            interactions.Option(
-                name="race",
-                description="Specify Race",
-                required=False,
-                type=interactions.OptionType.STRING
-            ),
-            interactions.Option(
-                name="gender",
-                description="Specify Gender",
-                required=False,
-                type=interactions.OptionType.STRING,
-                choices=[
-                    interactions.Choice(
-                        name="Male",
-                        value="Male"
-                    ),
-                    interactions.Choice(
-                        name="Female",
-                        value="Female"
-                    ),
-                    interactions.Choice(
-                        name="Omni",
-                        value="Omni"
-                    ),
-                ]
-            )
-        ]
-        )
-async def _npc(ctx: interactions.CommandContext, race = None, gender = None):
+        # guild = discord.Object(id = guilds[0])
+    )
+async def self(interaction: discord.Interaction, race: str = None, gender: Literal['Male', 'Female', 'Omni'] = None):
     if race and gender:
         randomNPC = generateNPC(race, gender)
     elif race:
@@ -487,14 +403,14 @@ async def _npc(ctx: interactions.CommandContext, race = None, gender = None):
     else:
         randomNPC = generateNPC()
 
-    npc=interactions.Embed(
+    npc=discord.Embed(
         title="Random NPC Generator",
         url='https://nexustabletop.com',
         description='Generates a random NPC. Can specify race, gender, and galaxy they\'re from',
-        color=interactions.Color.blurple()
+        color=discord.Color.blurple()
     )
     npc.add_field(name='Name', value='Billy Bob Thorton', inline=False)
     npc.add_field(name='Race', value=randomNPC, inline=False)
-    await ctx.send(embeds=npc)
+    await interaction.response.send_message(embed=npc)
 
-bot.start()
+client.run(discord_token)
