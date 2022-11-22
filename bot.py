@@ -299,6 +299,10 @@ async def self(interaction: discord.Interaction, dice: int, sides: int, attribut
                         if 3 <= val <= 6:
                             wins += 1
             rollText.add_field(name='\u200b', value='\u200b', inline=True)
+        else:
+            for val in rolls:
+                if 4 <= val <= 6:
+                    wins += 1
         if wins == dice and dice >= 5:
             wins = floor(wins * 1.5)
             rollText.add_field(name='Critical wins!', value=wins, inline=True)
